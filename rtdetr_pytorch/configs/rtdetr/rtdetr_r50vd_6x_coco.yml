@@ -1,0 +1,66 @@
+# ================= 基础模块引入 =================
+__include__: [
+  '../dataset/coco_detection.yml',
+  '../runtime.yml',
+  './include/dataloader.yml',
+  './include/optimizer.yml',
+  './include/rtdetr_r50vd.yml',
+]
+
+output_dir: ./output/rtdetr_r50vd_cattle_custom
+
+# ================= 核心覆盖区域 (Overrides) =================
+
+# 1. 类别设置 (Body, Head, Leg)
+# 只需要在这里改，底层的 rtdetr_r50vd.yml 会自动引用这个变量
+num_classes: 3
+remap_mscoco_category: False
+epoches: 100
+# ⚠️ 之前这里多了一个 model: ... 块，我已经删除了，千万不要加回来！
+
+# 2. 训练数据加载器 (完整重写，包含 Ops)
+train_dataloader: 
+  type: DataLoader
+  dataset: 
+    type: CocoDetection 
+    # 路径指向转换后的文件夹
+    img_folder: /root/autodl-tmp/RT-DETR-main/image_yolo/images/train/
+    ann_file: /root/autodl-tmp/RT-DETR-main/image_yolo/instances_train.json
+    return_masks: False
+    transforms:
+      type: Compose
+      ops:
+        - {type: RandomPhotometricDistort, p: 0.5}
+        - {type: RandomZoomOut, fill: 0}
+        - {type: RandomIoUCrop, p: 0.8}
+        - {type: SanitizeBoundingBox, min_size: 1}
+        - {type: RandomHorizontalFlip}
+        - {type: Resize, size: [640, 640]}
+        - {type: ToImageTensor}
+        - {type: ConvertDtype}
+        - {type: SanitizeBoundingBox, min_size: 1}
+        - {type: ConvertBox, out_fmt: 'cxcywh', normalize: True}
+  shuffle: True
+  batch_size: 16
+  num_workers: 8
+  drop_last: True
+  collate_fn: default_collate_fn
+
+# 3. 验证数据加载器 (完整重写)
+val_dataloader:
+  type: DataLoader
+  dataset: 
+    type: CocoDetection 
+    img_folder: /root/autodl-tmp/RT-DETR-main/image_yolo/images/val/
+    ann_file: /root/autodl-tmp/RT-DETR-main/image_yolo/instances_val.json
+    transforms:
+      type: Compose
+      ops: 
+        - {type: Resize, size: [640, 640]}
+        - {type: ToImageTensor}
+        - {type: ConvertDtype}
+  shuffle: False
+  batch_size: 16
+  num_workers: 8
+  drop_last: False
+  collate_fn: default_collate_fn

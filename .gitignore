@@ -1,0 +1,36 @@
+# 忽略所有权重文件
+*.pth
+*.pt
+*.weights
+
+# 忽略数据集文件夹 (假设你叫 dataset 或 data)
+dataset/
+data/
+coco/
+
+# 忽略输出文件夹 (RT-DETR 训练日志和结果)
+output/
+logs/
+wandb/
+
+# Python 缓存
+__pycache__/
+*.pyc
+.ipynb_checkpoints/# --- 你特别要求的文件夹 ---
+image_yolo/
+image/
+
+# --- 强烈建议忽略的大文件 ---
+*.pth
+*.pt
+*.weights
+*.onnx
+
+# --- 训练产生的日志和输出 ---
+wandb/
+output/
+logs/
+runs/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
